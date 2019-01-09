@@ -85,6 +85,8 @@ app.use('/favorite', (req, res, next) => {
             req.token = decodedToken
             next() // Fin du travail du middleware, la fonction "next()" indique de laisser passer la requête
         })
+    } else {
+        return res.status(401).send('Token invalide') // En cas d'erreur, le middleware stoppe toute action et renvoie immédiatement au client une erreur
     }
 })
 
