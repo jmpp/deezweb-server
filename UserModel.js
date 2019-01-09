@@ -10,6 +10,7 @@ const userSchema = mongoose.Schema({
     // Basé sur la documentation de mongoose : http://mongoosejs.com/docs/validation.html#custom-validators 
     'email' : {
         type: String,
+        required: [true, 'Le champs "email" est obligatoire'],
         validate: {
             validator: function(mailValue) {
                 // c.f. http://emailregex.com/
@@ -38,9 +39,6 @@ userSchema.statics.register = function(firstname, lastname, email, pass, pass_co
 
     if (error_messages.length === 0 && pass.trim() !== pass_confirmation.trim())
         error_messages.push('Les mots de passe doivent être identiques')
-
-    if (email.trim() === '')
-    	error_messages.push('L\'adresse email doit être renseignée')
 
     if (error_messages.length > 0)
         return Promise.reject(error_messages)
@@ -92,6 +90,32 @@ userSchema.statics.login = function(email, passwordInClear) {
                 }
             })
         })
+}
+
+userSchema.statics.addFavorite = function(userId, track) {
+    return this.findById(userId).then(user => {
+        if (!user) return Promise.reject('Utilisateur non connu')
+
+        let favIndex = user.favorites.findIndex(t => t.id === Number(trackId))
+        if (favIndex > -1)
+            return Promise.reject('Ce track est déjà dans les favoris')
+
+        user.favorites.push(track)
+        return user.save()
+    })
+}
+
+userSchema.statics.removeFavorite = function(userId, trackId) {
+    return this.findById(userId).then(user => {
+        if (!user) return Promise.reject('Utilisateur non connu')
+
+        let favIndex = user.favorites.findIndex(t => t.id === Number(trackId))
+        if (favIndex === -1)
+            return Promise.reject('Ce track n\'est pas dans les favoris')
+
+        user.favorites.splice(favIndex, 1);
+        return user.save()
+    })
 }
 
 // Export du Modèle mongoose représentant un objet User
